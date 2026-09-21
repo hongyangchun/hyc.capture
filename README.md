@@ -21,11 +21,13 @@ Quick capture to [Capacities](https://capacities.io) daily notes.
 omarchy plugin add https://github.com/hongyangchun/hyc.capture.git --enable
 ```
 
-Then bind a key in `~/.config/hypr/bindings.conf`:
+Then bind a key in `~/.config/hypr/bindings.lua` (Omarchy 4.x lua config):
 
+```lua
+o.bind("SUPER + N", "Cap Quick capture", "omarchy-shell shell summon hyc.capture")
 ```
-bindd = SUPER, N, Cap Quick capture, exec, omarchy-shell shell summon hyc.capture '{}'
-```
+
+then `hyprctl reload`.
 
 ## API
 
