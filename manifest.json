@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "id": "hyc.capture",
+  "id": "hyc.capq8",
   "name": "Cap Quick",
   "version": "0.1.0",
   "author": "hongyangchun",
-  "description": "Quick capture to Capacities daily note. Super+N opens a centered input; Enter sends.",
+  "description": "Quick capture to Capacities daily note.",
   "kinds": ["overlay"],
   "keepLoaded": true,
-  "entryPoints": { "overlay": "Overlay.qml" }
+  "entryPoints": { "overlay": "Panel.qml" }
 }

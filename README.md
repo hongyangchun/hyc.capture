@@ -1,4 +1,4 @@
-# hyc.capture — Cap Quick for Omarchy
+# hyc.capq8 — Cap Quick for Omarchy
 
 Quick capture to [Capacities](https://capacities.io) daily notes.
 
@@ -18,13 +18,13 @@ Quick capture to [Capacities](https://capacities.io) daily notes.
 ## Install
 
 ```sh
-omarchy plugin add https://github.com/hongyangchun/hyc.capture.git --enable
+omarchy plugin add https://github.com/hongyangchun/hyc.capq8.git --enable
 ```
 
 Then bind a key in `~/.config/hypr/bindings.lua` (Omarchy 4.x lua config):
 
 ```lua
-o.bind("SUPER + N", "Cap Quick capture", "omarchy-shell shell summon hyc.capture")
+o.bind("SUPER + N", "Cap Quick capture", "omarchy-shell shell summon hyc.capq8")
 ```
 
 then `hyprctl reload`.
