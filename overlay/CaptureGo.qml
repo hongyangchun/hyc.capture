@@ -90,7 +90,8 @@ Item {
 
   function stageAndSend(t) {
     sendProc.command = ["/bin/sh", "-c",
-      "mkdir -p '" + root.stateDir + "' && cat > '" + root.stateDir + "/pending.txt' <<'CAPEOF'\n" + t + "\nCAPEOF\n'" + scriptPath + "' '" + root.stateDir + "/pending.txt'"]
+      "export https_proxy=http://127.0.0.1:10808 http_proxy=http://127.0.0.1:10808; " +
+        "mkdir -p '" + root.stateDir + "' && cat > '" + root.stateDir + "/pending.txt' <<'CAPEOF'\n" + t + "\nCAPEOF\n'" + scriptPath + "' '" + root.stateDir + "/pending.txt'"]
     sendProc.running = true
   }
 
@@ -296,11 +297,16 @@ Item {
           }
           Text {
             visible: input.text.length === 0 && !input.activeFocus
-            text: "记点什么… (Enter 发送 · ↑ 历史 · Ctrl+Enter 发送 · Shift+Enter 换行 · Esc 关闭)"
+            text: "记点什么…\nEnter 发送 · Shift+Enter 换行 · Esc 关闭\nTab 粘贴剪贴板文字 · ↑↓ 翻今日历史 · 右键 = 上一条"
             color: root.muted
             font.pixelSize: 12
             anchors.fill: parent
             anchors.margins: 4
+          }
+          MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.RightButton
+            onClicked: root.histUp()
           }
           Keys.onPressed: function(event) {
             if (event.key === Qt.Key_Return && !(event.modifiers & Qt.ShiftModifier)) {

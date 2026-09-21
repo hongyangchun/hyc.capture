@@ -10,6 +10,6 @@
   ],
   "keepLoaded": true,
   "entryPoints": {
-    "overlay": "CaptureLite.qml"
+    "overlay": "CaptureGo.qml"
   }
 }

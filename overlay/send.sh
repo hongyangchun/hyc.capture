@@ -67,7 +67,7 @@ else
 fi
 
 # ── send ──
-HTTP_CODE="$(curl -sS -o /tmp/cap-quick-resp.json -w '%{http_code}' --max-time 15 \
+HTTP_CODE="$(curl -sS -o /tmp/cap-quick-resp.json -w '%{http_code}' --max-time 8 \
   -X POST "$API" \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Capacities-Api-Version: 1.0.0" \
@@ -79,13 +79,15 @@ case "$HTTP_CODE" in
     # success → try flushing any queued notes (best effort, one pass)
     if compgen -G "$QUEUE_DIR/*.md" >/dev/null 2>&1; then
       shopt -s nullglob
+      n=0
       for f in "$QUEUE_DIR"/*.md; do
         qdate=""
         [[ -f "$f.date" ]] && qdate="$(cat "$f.date")"
         if "$0" --no-ts "$f" "$qdate" >/dev/null 2>&1; then
           rm -f "$f" "$f.date"
+          n=$((n+1))
         fi
-        break  # one flush pass per successful send; next send continues
+        [[ $n -ge 10 ]] && break  # cap replays per pass to avoid bursts
       done
     fi
     # log for bar widget count
@@ -111,7 +113,15 @@ esac
 # ── queue ──
 mkdir -p "$QUEUE_DIR"
 STAMP="$(date +%Y%m%d-%H%M%S)-$RANDOM"
-cp "$MD_FILE" "$QUEUE_DIR/$STAMP.md"
+# dedupe: same content already queued → keep the older file, skip copy
+DUP=""
+for qf in "$QUEUE_DIR"/*.md; do
+  [[ -f "$qf" ]] || continue
+  if cmp -s "$qf" "$MD_FILE"; then DUP=1; break; fi
+done
+if [[ -z "$DUP" ]]; then
+  cp "$MD_FILE" "$QUEUE_DIR/$STAMP.md"
+fi
 [[ -n "$CAP_DATE" ]] && printf '%s' "$CAP_DATE" > "$QUEUE_DIR/$STAMP.date"
 echo "queued ($HTTP_CODE)"
 exit 1
