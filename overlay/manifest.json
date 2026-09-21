@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "hyc.cap",
+  "name": "Cap Quick",
+  "version": "0.2.0",
+  "author": "hongyangchun",
+  "description": "Quick capture to Capacities daily note.",
+  "kinds": [
+    "overlay"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "overlay": "MainOverlay.qml"
+  }
+}
