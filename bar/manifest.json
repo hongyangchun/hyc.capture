@@ -1,13 +1,16 @@
 {
   "schemaVersion": 1,
-  "id": "hyc.capq8bar2",
+  "id": "hyc.capqbar",
   "name": "Cap Quick Bar",
   "version": "0.1.0",
   "author": "hongyangchun",
-  "license": "MIT",
-  "description": "Bar entry for Cap Quick.",
-  "kinds": ["bar-widget"],
-  "entryPoints": { "barWidget": "BarEntry.qml" },
+  "description": "Cap Quick counter and launcher.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "CapBar.qml"
+  },
   "barWidget": {
     "displayName": "Cap Quick Bar",
     "description": "Quick capture counter and launcher.",
