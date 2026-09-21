@@ -31,10 +31,21 @@ fi
 [[ -n "$TOKEN" ]] || { echo "no token found" >&2; exit 3; }
 
 # ── build JSON payload (jq-safe) ──
+# prepend "HH:MM " and collapse to a single compact line; noTimeStamp:true so
+# the daily note shows one tight block per capture instead of heading+separate block
+TS="$(date +%H:%M)"
+printf '%s %s\n' "$TS" "$(cat "$MD_FILE")" > "$MD_FILE.final"
+python3 - "$MD_FILE.final" <<'PYEOF'
+import sys
+p = sys.argv[1]
+lines = [l.rstrip() for l in open(p, encoding='utf-8').read().splitlines() if l.strip()]
+open(p, 'w', encoding='utf-8').write(' / '.join(lines))
+PYEOF
+
 if [[ -n "$CAP_DATE" ]]; then
-  PAYLOAD="$(jq -n --rawfile m "$MD_FILE" --arg d "$CAP_DATE" '{markdown:$m, date:$d, noTimeStamp:false}')"
+  PAYLOAD="$(jq -n --rawfile m "$MD_FILE.final" --arg d "$CAP_DATE" '{markdown:$m, date:$d, noTimeStamp:true}')"
 else
-  PAYLOAD="$(jq -n --rawfile m "$MD_FILE" '{markdown:$m, noTimeStamp:false}')"
+  PAYLOAD="$(jq -n --rawfile m "$MD_FILE.final" '{markdown:$m, noTimeStamp:true}')"
 fi
 
 # ── send ──

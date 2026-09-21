@@ -5,7 +5,11 @@
   "version": "0.1.0",
   "author": "hongyangchun",
   "description": "Quick capture to Capacities daily note.",
-  "kinds": ["overlay"],
+  "kinds": [
+    "overlay"
+  ],
   "keepLoaded": true,
-  "entryPoints": { "overlay": "Panel.qml" }
+  "entryPoints": {
+    "overlay": "CaptureCard.qml"
+  }
 }

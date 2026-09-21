@@ -304,6 +304,29 @@ Item {
           color: root.muted
           font.pixelSize: Style.font.caption
         }
+
+        Rectangle {
+          id: sendButton
+          width: parent.width
+          height: 36
+          radius: 6
+          color: sendMa.pressed ? Qt.darker(root.border, 1.2) : sendMa.containsMouse ? Qt.lighter(root.border, 1.15) : root.border
+
+          Text {
+            anchors.centerIn: parent
+            text: root.sending ? "发送中…" : "发送 (Enter)"
+            color: root.background
+            font.pixelSize: Style.font.body
+            font.bold: true
+          }
+
+          MouseArea {
+            id: sendMa
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: root.send()
+          }
+        }
       }
     }
   }
