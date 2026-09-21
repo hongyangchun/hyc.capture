@@ -16,7 +16,7 @@ if [[ "${1:-}" == "--no-ts" ]]; then
   NO_TS=1
   shift
 fi
-MD_FILE="${1:?usage: send.sh <markdown-file> [date]}"
+MD_FILE="${1:-}"
 CAP_DATE="${2:-}"
 
 [[ -s "$MD_FILE" ]] || { echo "empty note" >&2; exit 2; }
@@ -38,10 +38,10 @@ fi
 # ── build JSON payload (jq-safe) ──
 # bullet per line: first line "- HH:MM text", following lines "- text".
 # noTimeStamp:true keeps the daily note tight (our inline HH:MM is the timestamp).
-TS="$(date +%H:%M)"
-export CAP_TS="$TS"
-export CAP_NO_TS="$NO_TS"
-python3 - "$MD_FILE" "$MD_FILE.final" <<'PYEOF'
+  TS="$(date +%H:%M)"
+  export CAP_TS="$TS"
+  export CAP_NO_TS="$NO_TS"
+  python3 - "$MD_FILE" "$MD_FILE.final" <<'PYEOF'
 import sys, os
 src, dst = sys.argv[1], sys.argv[2]
 lines = [l.rstrip() for l in open(src, encoding='utf-8').read().splitlines() if l.strip()]
@@ -59,6 +59,7 @@ for i, line in enumerate(lines):
 open(dst, 'w', encoding='utf-8').write('\n'.join(out) + '\n')
 PYEOF
 
+# markdown payload (optionally targeted at a specific daily note)
 if [[ -n "$CAP_DATE" ]]; then
   PAYLOAD="$(jq -n --rawfile m "$MD_FILE.final" --arg d "$CAP_DATE" '{markdown:$m, date:$d, noTimeStamp:true}')"
 else
@@ -91,7 +92,7 @@ case "$HTTP_CODE" in
     STAT_DIR="$HOME_DIR/.local/state/cap-quick"
     mkdir -p "$STAT_DIR/history"
     HIST="$STAT_DIR/history/$(date +%F).md"
-    { cat "$MD_FILE.final"; echo; } >> "$HIST"
+    { [[ -s "$MD_FILE.final" ]] && cat "$MD_FILE.final" && echo; } >> "$HIST" || true
     printf '%s\n' "$(date +%F)" >> "$STAT_DIR/sent.log"
     exit 0
     ;;
