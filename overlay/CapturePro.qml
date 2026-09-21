@@ -297,16 +297,11 @@ Item {
           }
           Text {
             visible: input.text.length === 0 && !input.activeFocus
-            text: "记点什么…\nEnter 发送 · Shift+Enter 换行 · Esc 关闭\nTab 粘贴剪贴板文字 · ↑↓ 翻今日历史 · 右键 = 上一条"
+            text: "记点什么…"
             color: root.muted
             font.pixelSize: 12
             anchors.fill: parent
             anchors.margins: 4
-          }
-          MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.RightButton
-            onClicked: root.histUp()
           }
           Keys.onPressed: function(event) {
             if (event.key === Qt.Key_Return && !(event.modifiers & Qt.ShiftModifier)) {
@@ -329,6 +324,15 @@ Item {
           }
         }
 
+
+        Text {
+          width: parent.width
+          visible: true
+          text: "Enter 发送 · Shift+Enter 换行 · Esc 关闭 · Tab 粘贴剪贴板 · ↑↓ 历史"
+          color: root.muted
+          font.pixelSize: 10
+          elide: Text.ElideRight
+        }
 
         Text {
           width: parent.width
