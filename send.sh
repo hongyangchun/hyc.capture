@@ -36,19 +36,27 @@ fi
 [[ -n "$TOKEN" ]] || { echo "no token found" >&2; exit 3; }
 
 # ── build JSON payload (jq-safe) ──
-# prepend "HH:MM " and collapse to a single compact line; noTimeStamp:true so
-# the daily note shows one tight block per capture instead of heading+separate block
+# bullet per line: first line "- HH:MM text", following lines "- text".
+# noTimeStamp:true keeps the daily note tight (our inline HH:MM is the timestamp).
 TS="$(date +%H:%M)"
-if (( NO_TS )); then
-  cp "$MD_FILE" "$MD_FILE.final"
-else
-  printf '%s %s\n' "$TS" "$(cat "$MD_FILE")" > "$MD_FILE.final"
-fi
-python3 - "$MD_FILE.final" <<'PYEOF'
-import sys
-p = sys.argv[1]
-lines = [l.rstrip() for l in open(p, encoding='utf-8').read().splitlines() if l.strip()]
-open(p, 'w', encoding='utf-8').write(' / '.join(lines))
+export CAP_TS="$TS"
+export CAP_NO_TS="$NO_TS"
+python3 - "$MD_FILE" "$MD_FILE.final" <<'PYEOF'
+import sys, os
+src, dst = sys.argv[1], sys.argv[2]
+lines = [l.rstrip() for l in open(src, encoding='utf-8').read().splitlines() if l.strip()]
+if not lines:
+    sys.exit(2)
+ts = os.environ.get('CAP_TS', '')
+no_ts = os.environ.get('CAP_NO_TS') == '1'
+out = []
+for i, line in enumerate(lines):
+    if i == 0:
+        prefix = '' if no_ts else ts + ' '
+    else:
+        prefix = ''
+    out.append('- ' + prefix + line)
+open(dst, 'w', encoding='utf-8').write('\n'.join(out) + '\n')
 PYEOF
 
 if [[ -n "$CAP_DATE" ]]; then
