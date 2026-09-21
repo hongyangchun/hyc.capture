@@ -11,6 +11,7 @@ Item {
   property bool opened: false
   property bool sending: false
   property bool hasImage: false
+  property string mediaObjId: ""
   property bool draftRestored: false
   property string sendError: ""
   property string clipboardHint: ""
@@ -21,6 +22,11 @@ Item {
   readonly property string draftPath: stateDir + "/draft.txt"
   readonly property string scriptPath: {
     var u = Qt.resolvedUrl("send.sh").toString()
+    if (u.indexOf("file://") === 0) u = u.substring(7)
+    return u
+  }
+  readonly property string imgHelperScript: {
+    var u = Qt.resolvedUrl("clipboard-image.sh").toString()
     if (u.indexOf("file://") === 0) u = u.substring(7)
     return u
   }
@@ -70,7 +76,7 @@ Item {
   }
 
   function loadClipboardHint() {
-    hintProc.command = ["sh", "-c", "wl-paste --no-newline 2>/dev/null | head -c 300"]
+    hintProc.command = ["/bin/sh", "-c", "wl-paste --type text/plain --no-newline 2>/dev/null | head -c 300"]
     hintProc.running = true
   }
 
@@ -101,7 +107,7 @@ Item {
     if (root.hasImage && t.length === 0) {
       // image-only: upload then append markdown
       imgSaveProc.command = ["/bin/sh", "-c",
-        "mkdir -p '" + root.stateDir + "/shots' && wl-paste --type image/png > '" + root.stateDir + "/shots/p.png' && echo '" + root.stateDir + "/shots/p.png'"]
+        imgHelperScript]
       imgSaveProc.running = true
       return
     }
@@ -219,30 +225,49 @@ Item {
   Process {
     id: mediaProc
     command: []
+    stdout: StdioCollector {
+      waitForEnd: true
+      onStreamFinished: {
+        mediaObjId = String(text).trim()
+      }
+    }
     onExited: function(code) {
       if (code !== 0) {
         root.sending = false
         root.sendError = "image upload failed"
         return
       }
-      const objId = imgIdCollector.text.trim()
-      const md = "![](capacities://" + objId + ")"
-      stageAndSend(md)
+      const objId = mediaObjId
+      if (objId.length === 0) {
+        root.sending = false
+        root.sendError = "image upload returned no id"
+        return
+      }
+      // EntityBlock append: embed the image object itself
+      // (markdown image refs with capacities:// URIs are stripped by the parser)
+      entityProc.command = ["/bin/sh", "-c",
+        "TOKEN=$(grep '^CAPACITIES_API_TOKEN=' ~/.hermes/.env | cut -d= -f2-); " +
+        "curl -sS --max-time 15 -X POST https://api.capacities.io/blocks/daily-note/append " +
+        "-H 'Authorization: Bearer $TOKEN' -H 'X-Capacities-Api-Version: 1.0.0' " +
+        "-H 'Content-Type: application/json' " +
+        "-d '{noTimeStamp:true, blocks:[{type:\"EntityBlock\", entityId:\"' + objId + '\"}]}'"]
+      entityProc.running = true
       root.hasImage = false
     }
   }
 
   Process {
-    id: imgIdCollector
+    id: entityProc
     command: []
-  }
-
-  // mediaProc stdout lands here too (cap-media.sh echoes the object id)
-  // redirect: mediaProc writes its id into imgIdCollector via the same stdout —
-  // Quickshell allows only one collector per stream, so mediaProc uses its own below.
-  Process {
-    id: mediaProcCollector
-    command: []
+    onExited: function(code) {
+      root.sending = false
+      if (code === 0) {
+        okNotify.running = true
+        root.hasImage = false
+      } else {
+        root.sendError = "append failed"
+      }
+    }
   }
 
   Process {
@@ -400,7 +425,7 @@ Item {
         Text {
           width: parent.width
           visible: root.hasImage
-          text: "🖼 剪贴板有图片 — 点击上传并附到笔记"
+          text: "🖼 剪贴板检测到图片 — 点击此行上传并附到笔记"
           color: root.muted
           font.pixelSize: 11
           MouseArea { anchors.fill: parent; onClicked: root.send() }

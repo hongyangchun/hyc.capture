@@ -10,6 +10,6 @@
   ],
   "keepLoaded": true,
   "entryPoints": {
-    "overlay": "MainOverlay.qml"
+    "overlay": "CapturePanel.qml"
   }
 }
