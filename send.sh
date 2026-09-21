@@ -11,6 +11,11 @@
 # Exit codes: 0 sent | 1 queued (network/server error) | 2 bad input | 3 auth error
 set -euo pipefail
 
+NO_TS=0
+if [[ "${1:-}" == "--no-ts" ]]; then
+  NO_TS=1
+  shift
+fi
 MD_FILE="${1:?usage: send.sh <markdown-file> [date]}"
 CAP_DATE="${2:-}"
 
@@ -34,7 +39,11 @@ fi
 # prepend "HH:MM " and collapse to a single compact line; noTimeStamp:true so
 # the daily note shows one tight block per capture instead of heading+separate block
 TS="$(date +%H:%M)"
-printf '%s %s\n' "$TS" "$(cat "$MD_FILE")" > "$MD_FILE.final"
+if (( NO_TS )); then
+  cp "$MD_FILE" "$MD_FILE.final"
+else
+  printf '%s %s\n' "$TS" "$(cat "$MD_FILE")" > "$MD_FILE.final"
+fi
 python3 - "$MD_FILE.final" <<'PYEOF'
 import sys
 p = sys.argv[1]
@@ -64,7 +73,7 @@ case "$HTTP_CODE" in
       for f in "$QUEUE_DIR"/*.md; do
         qdate=""
         [[ -f "$f.date" ]] && qdate="$(cat "$f.date")"
-        if "$0" "$f" "$qdate" >/dev/null 2>&1; then
+        if "$0" --no-ts "$f" "$qdate" >/dev/null 2>&1; then
           rm -f "$f" "$f.date"
         fi
         break  # one flush pass per successful send; next send continues
@@ -72,7 +81,9 @@ case "$HTTP_CODE" in
     fi
     # log for bar widget count
     STAT_DIR="$HOME_DIR/.local/state/cap-quick"
-    mkdir -p "$STAT_DIR"
+    mkdir -p "$STAT_DIR/history"
+    HIST="$STAT_DIR/history/$(date +%F).md"
+    { cat "$MD_FILE.final"; echo; } >> "$HIST"
     printf '%s\n' "$(date +%F)" >> "$STAT_DIR/sent.log"
     exit 0
     ;;
