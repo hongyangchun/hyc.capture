@@ -43,6 +43,7 @@ Item {
   }
 
   function close() {
+    if (root.sending) { root.sendError = "正在发送…"; return }
     const t = input.text.trim()
     if (t.length > 0 && !root.sending) saveDraft(t)
     else if (t.length === 0) clearDraft()
@@ -65,9 +66,8 @@ Item {
   }
 
   function saveDraft(t) {
-    draftProc.command = ["/bin/sh", "-c",
-      "mkdir -p '" + root.stateDir + "' && cat > '" + root.draftPath + "' <<'CAPEOF'\n" + t + "\nCAPEOF"]
-    draftProc.running = true
+    draftFile.setText(t)
+    draftFile.save()
   }
 
   function clearDraft() {
@@ -87,9 +87,10 @@ Item {
   }
 
   function stageAndSend(t) {
+    pendingFile.setText(t)
+    pendingFile.save()
     sendProc.command = ["/bin/sh", "-c",
-      "export https_proxy=http://127.0.0.1:10808 http_proxy=http://127.0.0.1:10808; " +
-        "mkdir -p '" + root.stateDir + "' && cat > '" + root.stateDir + "/pending.txt' <<'CAPEOF'\n" + t + "\nCAPEOF\n'" + scriptPath + "' '" + root.stateDir + "/pending.txt'"]
+      "export https_proxy=http://127.0.0.1:10808 http_proxy=http://127.0.0.1:10808; '" + scriptPath + "' '" + root.stateDir + "/pending.txt'"]
     sendProc.running = true
   }
 
@@ -122,7 +123,26 @@ Item {
   }
 
 
-  Process { id: draftProc; command: [] }
+  FileView {
+    id: pendingFile
+    path: root.stateDir + "/pending.txt"
+    watchChanges: false
+    preload: false
+    blockWrites: true
+    atomicWrites: true
+    printErrors: false
+  }
+
+  FileView {
+    id: draftFile
+    path: root.draftPath
+    watchChanges: false
+    preload: false
+    blockWrites: true
+    atomicWrites: true
+    printErrors: false
+  }
+
   Process { id: clearProc; command: ["/bin/sh", "-c", "rm -f '" + root.draftPath + "'"] }
 
 
@@ -137,10 +157,7 @@ Item {
         close()
         okNotify.running = true
       } else if (code === 1) {
-        input.clear()
-        clearProc.running = true
-        root.opened = false
-        queueNotify.running = true
+        root.sendError = "网络异常 — 内容已存本地队列，将在下次发送成功后自动补发"
       } else if (code === 3) {
         root.sendError = "token missing"
       } else {
@@ -150,7 +167,6 @@ Item {
   }
 
   Process { id: okNotify; command: ["notify-send", "-a", "Cap Quick", "✓ Appended to Capacities daily note"] }
-  Process { id: queueNotify; command: ["notify-send", "-a", "Cap Quick", "✗ Offline — saved to local queue"] }
 
   PanelWindow {
     visible: root.opened
@@ -185,23 +201,6 @@ Item {
         PropertyAnimation { target: card; property: "x"; from: card.x - 8; to: card.x + 8; duration: 60 }
         PropertyAnimation { target: card; property: "x"; from: card.x + 8; to: card.x - 8; duration: 60 }
         PropertyAnimation { target: card; property: "x"; to: card.x; duration: 60 }
-      }
-
-      SequentialAnimation {
-        id: slideOut
-        ParallelAnimation {
-          PropertyAnimation { target: card; property: "y"; to: card.y + 40; duration: 160; easing.type: Easing.InQuad }
-          PropertyAnimation { target: card; property: "opacity"; to: 0; duration: 160; easing.type: Easing.InQuad }
-        }
-        ScriptAction {
-          script: {
-            root.clearDraft()
-            root.opened = false
-            okNotify.running = true
-            card.opacity = 1
-            card.y = (panel.height - card.height) / 2
-          }
-        }
       }
 
       Column {
