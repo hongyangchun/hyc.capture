@@ -278,31 +278,68 @@ Item {
         }
 
 
-        Text {
-          width: parent.width
-          visible: true
-          text: "Enter / Ctrl+Enter 发送 · Shift+Enter 换行 · Tab 粘贴剪贴板 · Ctrl+Del 清空 · Esc 关闭"
-          color: root.muted
-          font.pixelSize: 10
-          elide: Text.ElideRight
-        }
-
-        Text {
-          width: parent.width
-          visible: root.clipboardHint.length > 0 && input.text.length === 0
-          text: "📋 剪贴板（Tab 粘贴）：" + (root.clipboardHint.length > 60 ? root.clipboardHint.slice(0, 60) + "…" : root.clipboardHint)
-          color: root.muted
-          font.pixelSize: 11
-          elide: Text.ElideRight
-          MouseArea {
-            anchors.fill: parent
-            onClicked: {
-              input.text = root.clipboardHint
-              input.cursorPosition = input.text.length
-              input.forceActiveFocus()
-            }
+          Text {
+              width: parent.width
+              text: "Enter / Ctrl+Enter 发送 · Shift+Enter 换行 · Ctrl+Del 清空 · Esc 关闭"
+              color: root.muted
+              opacity: 0.75
+              font.pixelSize: 9
+              elide: Text.ElideRight
           }
-        }
+
+          Rectangle {
+              visible: root.clipboardHint.length > 0 && input.text.length === 0
+              width: parent.width
+              height: clipRow.implicitHeight + 12
+              radius: 8
+              color: clipMa.containsMouse ? Qt.lighter(root.background, 1.18) : Qt.darker(root.background, 1.15)
+              border.width: 1
+              border.color: root.border
+
+              Row {
+                  id: clipRow
+                  anchors.left: parent.left
+                  anchors.right: parent.right
+                  anchors.verticalCenter: parent.verticalCenter
+                  anchors.margins: 8
+                  spacing: 8
+
+                  Text { text: "📋"; font.pixelSize: 12 }
+
+                  Text {
+                      width: parent.width - tabKey.width - parent.spacing * 2 - 24
+                      text: root.clipboardHint.length > 48 ? root.clipboardHint.slice(0, 48) + "…" : root.clipboardHint
+                      color: root.foreground
+                      font.pixelSize: 11
+                      elide: Text.ElideRight
+                      anchors.verticalCenter: parent.verticalCenter
+                  }
+
+                  Rectangle {
+                      id: tabKey
+                      width: tabText.width + 12
+                      height: tabText.height + 8
+                      radius: 4
+                      color: Qt.darker(root.background, 1.25)
+                      border.width: 1
+                      border.color: root.border
+                      anchors.verticalCenter: parent.verticalCenter
+
+                      Text { id: tabText; anchors.centerIn: parent; text: "Tab"; color: root.muted; font.pixelSize: 9; font.bold: true }
+                  }
+              }
+
+              MouseArea {
+                  id: clipMa
+                  anchors.fill: parent
+                  hoverEnabled: true
+                  onClicked: {
+                      input.text = root.clipboardHint
+                      input.cursorPosition = input.text.length
+                      input.forceActiveFocus()
+                  }
+              }
+          }
 
         Text {
           width: parent.width
