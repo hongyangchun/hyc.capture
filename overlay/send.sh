@@ -106,7 +106,9 @@ case "$HTTP_CODE" in
     # network / rate limit / server → queue
     ;;
   *)
-    # 4xx bad request etc. → queue too (don't lose user text over a bug)
+    # 4xx = content/API problem: replaying won't help -> report, don't queue
+    echo "rejected ($HTTP_CODE): $(cat /tmp/cap-quick-resp.json 2>/dev/null | head -c 150)" >&2
+    exit 4
     ;;
 esac
 
