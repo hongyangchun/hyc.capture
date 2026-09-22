@@ -13,8 +13,6 @@ Item {
   property bool draftRestored: false
   property string sendError: ""
   property string clipboardHint: ""
-  property var historyLines: []
-  property int histIndex: -1
 
   readonly property string stateDir: Quickshell.env("HOME") + "/.local/state/cap-quick"
   readonly property string draftPath: stateDir + "/draft.txt"
@@ -95,31 +93,6 @@ Item {
     sendProc.running = true
   }
 
-  function histUp() {
-    if (historyLines.length === 0) {
-      histProc.command = ["/bin/sh", "-c",
-        "grep -E '^- [0-9][0-9]:[0-9][0-9] ' '" + stateDir + "/history/" + Qt.formatDate(new Date(), "yyyy-MM-dd") + ".md' 2>/dev/null | tail -20 || true"]
-      histProc.running = true
-      return
-    }
-    if (histIndex < historyLines.length - 1) {
-      histIndex++
-      input.text = historyLines[historyLines.length - 1 - histIndex].replace(/^- /, "")
-      input.cursorPosition = input.text.length
-    }
-  }
-
-  function histDown() {
-    if (histIndex > 0) {
-      histIndex--
-      input.text = historyLines[historyLines.length - 1 - histIndex].replace(/^- /, "")
-      input.cursorPosition = input.text.length
-    } else {
-      histIndex = -1
-      input.text = ""
-    }
-  }
-
   // ---- IO ----
   Process {
     id: draftReadProc
@@ -151,25 +124,6 @@ Item {
 
   Process { id: draftProc; command: [] }
   Process { id: clearProc; command: ["/bin/sh", "-c", "rm -f '" + root.draftPath + "'"] }
-
-  Process {
-    id: histProc
-    command: []
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: {
-        const lines = String(text).trim().split("\n").filter(function(l) { return l.trim().length > 0 })
-        root.historyLines = lines
-        if (lines.length > 0) {
-          root.histIndex = 0
-          input.text = lines[lines.length - 1].replace(/^- /, "")
-          input.cursorPosition = input.text.length
-        }
-      }
-    }
-  }
-
-
 
 
   Process {
@@ -314,12 +268,6 @@ Item {
               event.accepted = true
               input.text = root.clipboardHint
               input.cursorPosition = input.text.length
-            } else if (event.key === Qt.Key_Up && input.text.length === 0) {
-              event.accepted = true
-              root.histUp()
-            } else if (event.key === Qt.Key_Down && input.text.length === 0) {
-              event.accepted = true
-              root.histDown()
             }
           }
         }
@@ -328,7 +276,7 @@ Item {
         Text {
           width: parent.width
           visible: true
-          text: "Enter 发送 · Shift+Enter 换行 · Esc 关闭 · Tab 粘贴剪贴板 · ↑↓ 历史"
+          text: "Enter / Ctrl+Enter 发送 · Shift+Enter 换行 · Tab 粘贴剪贴板 · Esc 关闭"
           color: root.muted
           font.pixelSize: 10
           elide: Text.ElideRight
