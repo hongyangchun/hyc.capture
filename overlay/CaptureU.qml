@@ -76,6 +76,12 @@ Item {
     clearProc.running = true
   }
 
+  function clearAll() {
+    input.clear()
+    clearDraft()
+    input.forceActiveFocus()
+  }
+
   function send() {
     const t = input.text.trim()
     if (t.length === 0) {
@@ -243,6 +249,16 @@ Item {
             anchors.fill: parent
             anchors.margins: 4
           }
+          Text {
+            visible: input.text.length > 0 && !root.sending
+            text: "✕"
+            color: root.muted
+            font.pixelSize: 12
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.margins: 4
+            MouseArea { anchors.fill: parent; anchors.margins: -6; onClicked: root.clearAll() }
+          }
           Keys.onPressed: function(event) {
             if (event.key === Qt.Key_Return && !(event.modifiers & Qt.ShiftModifier)) {
               event.accepted = true
@@ -254,6 +270,9 @@ Item {
               event.accepted = true
               input.text = root.clipboardHint
               input.cursorPosition = input.text.length
+            } else if (event.key === Qt.Key_Delete && (event.modifiers & Qt.ControlModifier)) {
+              event.accepted = true
+              root.clearAll()
             }
           }
         }
@@ -262,7 +281,7 @@ Item {
         Text {
           width: parent.width
           visible: true
-          text: "Enter / Ctrl+Enter 发送 · Shift+Enter 换行 · Tab 粘贴剪贴板 · Esc 关闭"
+          text: "Enter / Ctrl+Enter 发送 · Shift+Enter 换行 · Tab 粘贴剪贴板 · Ctrl+Del 清空 · Esc 关闭"
           color: root.muted
           font.pixelSize: 10
           elide: Text.ElideRight
