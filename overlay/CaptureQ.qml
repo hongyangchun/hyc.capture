@@ -270,7 +270,7 @@ Item {
               event.accepted = true
               input.text = root.clipboardHint
               input.cursorPosition = input.text.length
-            } else if (event.key === Qt.Key_Delete && (event.modifiers & Qt.ControlModifier)) {
+            } else if ((event.key === Qt.Key_Delete || event.key === Qt.Key_Backspace) && (event.modifiers & Qt.ControlModifier)) {
               event.accepted = true
               root.clearAll()
             }
@@ -280,7 +280,7 @@ Item {
 
           Text {
               width: parent.width
-              text: "Enter / Ctrl+Enter 发送 · Shift+Enter 换行 · Ctrl+Del 清空 · Esc 关闭"
+              text: "Enter / Ctrl+Enter 发送 · Shift+Enter 换行 · Tab 粘贴 · Ctrl+Del/⌫ 清空 · Esc 关闭"
               color: root.muted
               opacity: 0.75
               font.pixelSize: 9
