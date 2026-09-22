@@ -219,10 +219,11 @@ Item {
         TextEdit {
           id: input
           width: parent.width
-          height: 64
+          height: Math.min(Math.max(64, contentHeight + 8), 200)
           color: root.foreground
           font.pixelSize: 13
           wrapMode: TextEdit.Wrap
+          clip: true
           selectedTextColor: root.background
           selectionColor: root.border
           Rectangle {
