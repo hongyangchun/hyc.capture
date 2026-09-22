@@ -66,8 +66,10 @@ Item {
   }
 
   function saveDraft(t) {
-    draftFile.setText(t)
-    draftFile.save()
+    draftWriteProc.command = ["/bin/sh", "-c",
+    'mkdir -p "$3"; printf "%s" "$1" > "$2"',
+    "sh", t, root.draftPath, root.stateDir]
+    draftWriteProc.running = true
   }
 
   function clearDraft() {
@@ -87,10 +89,11 @@ Item {
   }
 
   function stageAndSend(t) {
-    pendingFile.setText(t)
-    pendingFile.save()
+    // content travels as argv ($1); never heredoc, never shell-parsed
     sendProc.command = ["/bin/sh", "-c",
-      "export https_proxy=http://127.0.0.1:10808 http_proxy=http://127.0.0.1:10808; '" + scriptPath + "' '" + root.stateDir + "/pending.txt'"]
+      'export https_proxy=http://127.0.0.1:10808 http_proxy=http://127.0.0.1:10808; printf "%s" "$1" > "$2"; '
+      + scriptPath + ' "$2"',
+      'sh', t, root.stateDir + '/pending.txt']
     sendProc.running = true
   }
 
@@ -123,26 +126,9 @@ Item {
   }
 
 
-  FileView {
-    id: pendingFile
-    path: root.stateDir + "/pending.txt"
-    watchChanges: false
-    preload: false
-    blockWrites: true
-    atomicWrites: true
-    printErrors: false
-  }
 
-  FileView {
-    id: draftFile
-    path: root.draftPath
-    watchChanges: false
-    preload: false
-    blockWrites: true
-    atomicWrites: true
-    printErrors: false
-  }
 
+  Process { id: draftWriteProc; command: [] }
   Process { id: clearProc; command: ["/bin/sh", "-c", "rm -f '" + root.draftPath + "'"] }
 
 
