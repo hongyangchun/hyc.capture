@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "hyc.capqbar",
+  "id": "hyc.capcount",
   "name": "Cap Quick Bar",
   "version": "0.1.0",
   "author": "hongyangchun",
@@ -9,7 +9,7 @@
     "bar-widget"
   ],
   "entryPoints": {
-    "barWidget": "CapBar.qml"
+    "barWidget": "CapIcon.qml"
   },
   "barWidget": {
     "displayName": "Cap Quick Bar",
