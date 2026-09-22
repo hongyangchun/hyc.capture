@@ -270,7 +270,7 @@ Item {
         Text {
           width: parent.width
           visible: root.clipboardHint.length > 0 && input.text.length === 0
-          text: "📋 " + (root.clipboardHint.length > 70 ? root.clipboardHint.slice(0, 70) + "…" : root.clipboardHint) + "  (Tab)"
+          text: "📋 剪贴板（Tab 粘贴）：" + (root.clipboardHint.length > 60 ? root.clipboardHint.slice(0, 60) + "…" : root.clipboardHint)
           color: root.muted
           font.pixelSize: 11
           elide: Text.ElideRight
